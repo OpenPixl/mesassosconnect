@@ -1,0 +1,74 @@
+networks:
+  # création d'un nouveau réseau
+  symfony:
+    ipam:
+      config:
+        - subnet: 172.${PROJECT_IP_NETWORK}.0.0/16
+
+services:
+
+  # Eléments pour le container "Mariadb"
+  mariadb:
+    image: mariadb:latest
+    container_name: ${PROJECT}_mariadb
+    restart: ${RESTART}
+    volumes:
+      - ./mariadb:/var/lib/mysql
+    ports:
+      - ${MARIA_HOST_PORT}:3306
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIA_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${MARIADB_DBNAME}
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+    networks:
+      symfony:
+        ipv4_address: 172.${PROJECT_IP_NETWORK}.1.1 # Mise en place d'une adresse IP_V4 fixe pour le container
+
+  # Eléments pour le Container "PhpMyAdmin"
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: ${PROJECT}_pma
+    restart: ${RESTART}
+    depends_on:
+      - mariadb
+    ports:
+      - 8080:80
+    environment:
+      PMA_HOST: ${PMA_HOST}
+      MARIA_ROOT_PASSWORD: ${MARIA_ROOT_PASSWORD}
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+    networks:
+      symfony:
+        ipv4_address: 172.${PROJECT_IP_NETWORK}.1.2 # Mise en place d'une adresse IP_V4 fixe pour le container
+
+  php:
+    container_name: ${PROJECT}_php
+    build:
+      context: ./php
+    ports:
+      - 8001:80
+      - 8443:443
+    volumes:
+      - ./php/apache/default.conf:/etc/apache2/sites-enabled/000-default.conf
+      - ./php/apache/default-ssl.conf:/etc/apache2/sites-enabled/000-default-ssl.conf
+      - ./php/etc/ssl:/etc/ssl
+      - ./app:/var/www
+    depends_on:
+      - mariadb
+    networks:
+      symfony:
+        ipv4_address: 172.${PROJECT_IP_NETWORK}.1.3 # Mise en place d'une adresse IP_V4 fixe pour le container
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: ${PROJECT}_mailhog
+    logging:
+      driver: 'none'
+    ports:
+      - 1025:1025 #SMTP
+      - 8025:8025 #Boite mail
+    networks:
+      symfony:
+        ipv4_address: 172.${PROJECT_IP_NETWORK}.1.4 # Mise en place d'une adresse IP_V4 fixe pour le container
