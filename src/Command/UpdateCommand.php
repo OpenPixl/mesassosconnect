@@ -15,7 +15,7 @@ class UpdateCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
 
-        $scriptPath = __DIR__ . '/../../update.sh';
+        $scriptPath = __DIR__ . '/updateMac.sh';
 
         if (file_exists($scriptPath)) {
             $io->note('Executing update script...');

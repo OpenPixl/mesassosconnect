@@ -46,7 +46,7 @@ services:
   php:
     container_name: ${PROJECT}_php
     build:
-      context: ./php
+      context: containers_data/php
     ports:
       - 8001:80
       - 8443:443
